@@ -1,0 +1,20 @@
+# Скопируйте в docker-compose.yml, рядом положите config.toml и .env.
+services:
+  backuper:
+    build: .
+    image: tg-backuper:local
+    container_name: tg-backuper
+    restart: unless-stopped
+    env_file: .env                 # TG_TOKEN, TG_CHAT_ID и другие секреты для config.toml
+    environment:
+      TZ: Europe/Moscow
+    volumes:
+      - ./config.toml:/config/config.toml:ro
+      - ./data:/data               # состояние (какие сообщения чьи) и временные файлы
+      # Источники — подключайте то, что нужно вашим заданиям:
+      # - /srv/site:/backup/site:ro                     # каталог с хоста
+      # - /var/run/postgresql:/var/run/postgresql       # PostgreSQL хоста через сокет
+      # - /var/run/docker.sock:/var/run/docker.sock     # docker exec в другие контейнеры (это права root на хосте!)
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "3" }

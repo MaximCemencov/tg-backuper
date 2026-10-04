@@ -1,0 +1,43 @@
+# tg-backuper — пример настроек. ${ИМЯ} берётся из окружения (.env), ${ИМЯ:-значение} — со
+# значением по умолчанию. В command раскрытие делает bash при запуске, а не загрузчик.
+
+timezone = "Europe/Moscow"     # для расписаний и дат в подписях
+host = "server-1"              # подпись машины в сообщении (по умолчанию — hostname)
+lang = "ru"                    # язык подписей: ru или en
+data_dir = "/data"
+# part_size_mb = 45            # облачный Bot API принимает до 50 МБ — больше режем на части
+
+[telegram]
+token = "${TG_TOKEN}"
+chat_id = "${TG_CHAT_ID}"      # личка, группа или канал (бот должен там писать)
+# thread_id = 123              # тема в группе с темами
+# silent = true                # без звука
+# api_url = "http://telegram-bot-api:8081"   # свой Bot API server: файлы до 2 ГБ
+
+[[job]]
+name = "databases"             # уникально на этой машине; на разных машинах — разные имена
+title = "Базы"
+schedule = "0 3 * * *"         # cron: минута час день месяц день_недели; или interval = "6h"
+keep = 1                       # сколько наборов держать в чате (старые удаляются)
+# run_on_start = true          # прогнать сразу при запуске
+# age_recipients = ["age1…"]   # шифровать: публичный ключ age, закрытый держите у себя
+
+[[job.source]]
+name = "app.dump"
+command = "pg_dump -Fc -h /var/run/postgresql -U postgres app"
+run_as_owner_of = "/var/run/postgresql"   # от имени владельца сокета (postgres хоста): peer без пароля
+# run_as_uid = 999             # или uid явно
+
+[[job.source]]
+name = "other-db.dump"
+command = "docker exec my-postgres pg_dump -U app -Fc app"
+
+[[job.source]]
+name = "site"                  # каталог уйдёт как site.tar.gz
+path = "/backup/site"
+exclude = ["cache", "*.log"]   # шаблоны путей внутри каталога; каталог исключается целиком
+
+[[job.source]]
+name = "export.zip"
+url = "https://example.com/export.zip"
+headers = { Authorization = "Bearer ${EXPORT_TOKEN}" }

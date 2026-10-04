@@ -1,0 +1,7 @@
+.env
+config.toml
+docker-compose.yml
+data/
+__pycache__/
+*.pyc
+.DS_Store
